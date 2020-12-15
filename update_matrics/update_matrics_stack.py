@@ -21,7 +21,7 @@ class UpdateMatricsStack(core.Stack):
                         # Empty list due to missing metric
                         continue
 
-                    dimension = dimensions[i][j]
+                    dimension = dimensions[i][j][0]
                     threshold = thresholds[i][name.split("-")[-1]]
 
                     metric_name = get_metric_name(name)
@@ -46,3 +46,6 @@ class UpdateMatricsStack(core.Stack):
                                                 statistic="avg",
                                                 threshold=threshold,
                                                 treat_missing_data=aws_cloudwatch.TreatMissingData.NOT_BREACHING)
+                    break
+                break
+            
