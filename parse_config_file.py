@@ -113,7 +113,8 @@ def is_matric_exist(alarm, metric_name, dimensions):
 
 
 def get_alarms(model, framework, path, config_file):
-    with open(f"{path}/{config_file}", "r") as f:
+    fname = os.path.join(path, config_file)
+    with open(fname, "r") as f:
         config = f.read()
 
     alarm_names = []
