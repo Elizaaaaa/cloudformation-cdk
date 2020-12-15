@@ -15,6 +15,17 @@ metric_names = {
             "Loss": "GPT2 Train_loss",
             "Duration": "GPT2 Time_to_train"
         }
+    },
+    "pytorch":{
+        "bert":{
+            "Loss": "Bert Loss",
+            "Throughput": "Bert Sequences/second",
+            "Duration": "Bert Time_to_train"
+        },
+        "t5":{
+            "Loss": "T5 Loss",
+            "Duration": "T5 Time_to_train"
+        }
     }
 }
 instances = ["p3dn", "p4d"]
@@ -23,6 +34,16 @@ cloudwatch = boto3.client('cloudwatch', region_name="us-west-2")
 sns_topic_group = "arn:aws:sns:us-west-2:578276202366:rubik-sns-topic"
 namespace = "ModelParallelism"
 period = 60 * 60 * 24
+retry_fetch_days = 10
+
+def get_metric_name(name):
+    f = "tensorflow2.3" if "TF" in name else "pytorch"
+    model = name.split("-")[2].lower()
+    metric = name.split('-')[-1]
+
+    metric_name = metric_names[f][model][metric]
+    return metric_name
+
 
 def get_alarm_name(model_name, framework_name, instance, config_file, metric_name):
     dimensions = []
@@ -85,31 +106,40 @@ def get_alarm_name(model_name, framework_name, instance, config_file, metric_nam
         dimensions.append({'Name': 'Instance Type', 'Value': 'p3.16xlarge'})
 
     name = f"Rubik{pipeline}{model}{framework}{hvd}{instance}{nodes}-{metric_name}"
+
+    metric_name = get_metric_name(name)
+    if not is_matric_exist(name, metric_name, dimensions):
+        print(f"The alarm {name} does not have necessary cloudwatch value!")
+        return [], []
     
     return name, dimensions
 
 
 def is_matric_exist(alarm, metric_name, dimensions):
-    metric_data = cloudwatch.get_metric_data(
-            MetricDataQueries=[
-                {
-                    'Id': alarm.replace("-", "").lower(),
-                    'MetricStat': {
-                        'Metric': {
-                            'Namespace': namespace,
-                            'MetricName': metric_name,
-                            'Dimensions': dimensions
+    has_data = False
+    for i in range(1, retry_fetch_days):
+        metric_data = cloudwatch.get_metric_data(
+                MetricDataQueries=[
+                    {
+                        'Id': alarm.replace("-", "").lower(),
+                        'MetricStat': {
+                            'Metric': {
+                                'Namespace': namespace,
+                                'MetricName': metric_name,
+                                'Dimensions': dimensions
+                            },
+                            'Period': period*i,
+                            'Stat': 'Average',
                         },
-                        'Period': period,
-                        'Stat': 'Average',
-                    },
-                }
-            ],
-            StartTime=datetime.now() - timedelta(seconds=period),
-            EndTime=datetime.now(),
-        )
-    
-    return (len(metric_data["MetricDataResults"][0]["Values"]) > 0)
+                    }
+                ],
+                StartTime=datetime.now() - timedelta(seconds=period*i),
+                EndTime=datetime.now(),
+            )
+        if (len(metric_data["MetricDataResults"][0]["Values"]) > 0):
+            has_data = True
+            break
+    return has_data
 
 
 def get_alarms(model, framework, path, config_file):

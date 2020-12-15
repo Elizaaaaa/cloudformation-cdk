@@ -4,7 +4,7 @@ import glob, os
 from aws_cdk import core
 
 from update_matrics.update_matrics_stack import UpdateMatricsStack
-from parse_config_file import get_alarms
+from update_matrics.parse_config_file import get_alarms
 
 
 config_path = "./configs"

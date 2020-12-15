@@ -1,29 +1,7 @@
 from aws_cdk import core, aws_cloudwatch
+from parse_config_file import get_metric_name
 
-metric_names = {
-    "tensorflow2.3":{
-        "bert":{
-            "Loss": "Bert Loss",
-            "Throughput": "Bert Tokens/second",
-            "Duration": "Bert Time_to_train"
-        },
-        "gpt2":{
-            "Loss": "GPT2 Train_loss",
-            "Duration": "GPT2 Time_to_train"
-        }
-    },
-    "pytorch":{
-        "bert":{
-            "Loss": "Bert Loss",
-            "Throughput": "Bert Sequences/second",
-            "Duration": "Bert Time_to_train"
-        },
-        "t5":{
-            "Loss": "T5 Loss",
-            "Duration": "T5 Time_to_train"
-        }
-    }
-}
+
 namespace = "ModelParallelism"
 period = core.Duration.days(1)
 
@@ -33,7 +11,6 @@ class UpdateMatricsStack(core.Stack):
         super().__init__(scope, construct_id, **kwargs)
 
         for frame_model in props:
-            framework, model = frame_model.split("_")
             names = props[frame_model]["Names"]
             dimensions = props[frame_model]["Dimensions"]
             
@@ -41,15 +18,15 @@ class UpdateMatricsStack(core.Stack):
                 for j, name in enumerate(alarm_name_group):
                     dimension = dimensions[i][j]
 
-                    metric_name = metric_names[framework][model.lower()][name.split('-')[-1]]
-                    print(metric_name)
+                    print(name)
+                    metric_name = get_metric_name(name)
                     metric = aws_cloudwatch.Metric(metric_name=metric_name,
                                                     namespace=namespace,
                                                     dimensions=dimension,
                                                     period=period,
                                                     statistic="avg")
 
-                    print(f"{metric}\n")
+                    print(f"{metric.to_string()}\n")
 
         # operator = aws_cloudwatch.ComparisonOperator.LessThanThreshold if "Throughput" in name \
         #         else aws_cloudwatch.ComparisonOperator.GreaterThanThreshold
