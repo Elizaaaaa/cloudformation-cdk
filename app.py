@@ -16,12 +16,16 @@ for name in os.listdir(config_path):
     path = os.path.join(config_path, name)
     alarm_names = []
     alarm_dimensions = []
+    alarm_thresholds = []
     for config_file in os.listdir(path):
-        names, dimensions = get_alarms(model, framework, path, config_file)
+        names, dimensions, thresholds = get_alarms(model, framework, path, config_file)
         alarm_names.append(names)
         alarm_dimensions.append(dimensions)
+        alarm_thresholds.append(thresholds)
+        if name == "pytorch_BERT" and "commit" in config_file:
+            print(f"\nCheck what's in the name:\n{alarm_names}\n")
     
-    props[name] = {"Names": alarm_names, "Dimensions": alarm_dimensions}
+    props[name] = {"Names": alarm_names, "Dimensions": alarm_dimensions, "Thresholds": alarm_thresholds}
 
 app = core.App()
 UpdateMatricsStack(app, "update-matrics", props)

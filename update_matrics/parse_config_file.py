@@ -22,6 +22,11 @@ metric_names = {
             "Throughput": "Bert Sequences/second",
             "Duration": "Bert Time_to_train"
         },
+        "bertnonsequential": {
+            "Loss": "BertNonSequential Loss",
+            "Throughput": "BertNonSequential Sequences/second",
+            "Duration": "BertNonSequential Time_to_train"
+        },
         "t5":{
             "Loss": "T5 Loss",
             "Duration": "T5 Time_to_train"
@@ -40,6 +45,9 @@ def get_metric_name(name):
     f = "tensorflow2.3" if "TF" in name else "pytorch"
     model = name.split("-")[2].lower()
     metric = name.split('-')[-1]
+
+    if "NonSquential" in name:
+        model += "nonsequential"
 
     metric_name = metric_names[f][model][metric]
     return metric_name
@@ -85,6 +93,8 @@ def get_alarm_name(model_name, framework_name, instance, config_file, metric_nam
     hvd = ""
     # nodes:
     nodes = ""
+    # bert sequential
+    seq = ""
     if "horovod" in config_file:
         hvd = "-HVD"
         dimensions.append({'Name': 'Horovod', 'Value': 'True'})
@@ -94,6 +104,9 @@ def get_alarm_name(model_name, framework_name, instance, config_file, metric_nam
         nodes = "-2Nodes"
         dimensions.append({'Name': 'Horovod', 'Value': 'True'})
         dimensions.append({'Name': 'Instance count', 'Value': '2'})
+    elif "sequential" in config_file:
+        seq = "-NonSequential"
+        dimensions.append({'Name': 'Horovod', 'Value': 'False'})
     else:
         dimensions.append({'Name': 'Horovod', 'Value': 'False'})
         dimensions.append({'Name': 'Instance count', 'Value': '1'})
@@ -105,7 +118,7 @@ def get_alarm_name(model_name, framework_name, instance, config_file, metric_nam
     else:
         dimensions.append({'Name': 'Instance Type', 'Value': 'p3.16xlarge'})
 
-    name = f"Rubik{pipeline}{model}{framework}{hvd}{instance}{nodes}-{metric_name}"
+    name = f"Rubik{pipeline}{model}{framework}{hvd}{seq}{instance}{nodes}-{metric_name}"
 
     metric_name = get_metric_name(name)
     if not is_matric_exist(name, metric_name, dimensions):
@@ -116,6 +129,7 @@ def get_alarm_name(model_name, framework_name, instance, config_file, metric_nam
 
 
 def is_matric_exist(alarm, metric_name, dimensions):
+    # TODO: deal with bert non sequential missing values
     has_data = False
     for i in range(1, retry_fetch_days):
         metric_data = cloudwatch.get_metric_data(
@@ -167,7 +181,7 @@ def get_alarms(model, framework, path, config_file):
                 # create the EC2 alarms based on the single_node_commit,ini
                 # ec2 tests only runs on nightly pipeline
                 ec2_config = config_file.replace("commit", "nightly")
-                # TODO: the dimension of EC2 test is different
+                # the dimension of EC2 test is different
                 name, dimensions = get_alarm_name(model, framework, f"-EC2", ec2_config, metrics[metric_name])
                 alarm_names.append(name)
                 ec2_dimensions = []
@@ -181,6 +195,6 @@ def get_alarms(model, framework, path, config_file):
             alarm_names.append(name)
             metric_dimensions.append(dimensions)
     
-    return alarm_names, metric_dimensions
+    return alarm_names, metric_dimensions, thresholds
 
 

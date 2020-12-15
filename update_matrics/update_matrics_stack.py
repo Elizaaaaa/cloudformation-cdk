@@ -13,12 +13,17 @@ class UpdateMatricsStack(core.Stack):
         for frame_model in props:
             names = props[frame_model]["Names"]
             dimensions = props[frame_model]["Dimensions"]
+            thresholds = props[frame_model]["Thresholds"]
             
             for i, alarm_name_group in enumerate(names):
                 for j, name in enumerate(alarm_name_group):
-                    dimension = dimensions[i][j]
+                    if len(name)==0:
+                        # Empty list due to missing metric
+                        continue
 
-                    print(name)
+                    dimension = dimensions[i][j]
+                    threshold = thresholds[i][name.split("-")[-1]]
+
                     metric_name = get_metric_name(name)
                     metric = aws_cloudwatch.Metric(metric_name=metric_name,
                                                     namespace=namespace,
@@ -26,19 +31,18 @@ class UpdateMatricsStack(core.Stack):
                                                     period=period,
                                                     statistic="avg")
 
-                    print(f"{metric.to_string()}\n")
-
-        # operator = aws_cloudwatch.ComparisonOperator.LessThanThreshold if "Throughput" in name \
-        #         else aws_cloudwatch.ComparisonOperator.GreaterThanThreshold
-
-        # alarm = aws_cloudwatch.Alarm(scope=self,
-        #                             id=name,
-        #                             alarm_description=f"The Model Parallelism alarm {name}.",
-        #                             alarm_name=name,
-        #                             comparison_operator=operator,
-        #                             evaluation_periods=1,
-        #                             metric=athena_workgroup_processed_bytes,
-        #                             period=core.Duration.days(1),
-        #                             statistic="sum",
-        #                             threshold=ONE_TERABYTE_IN_BYTES,
-        #                             treat_missing_data=aws_cloudwatch.TreatMissingData.NOT_BREACHING)
+                    operator = aws_cloudwatch.ComparisonOperator.LESS_THAN_LOWER_THRESHOLD if "Throughput" in name \
+                            else aws_cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD
+                    
+                    print(f"Currently working on {name}")
+                    alarm = aws_cloudwatch.Alarm(scope=self,
+                                                id=name,
+                                                alarm_description=f"The Model Parallelism alarm {name}.",
+                                                alarm_name=name,
+                                                comparison_operator=operator,
+                                                evaluation_periods=1,
+                                                metric=metric,
+                                                period=period,
+                                                statistic="avg",
+                                                threshold=threshold,
+                                                treat_missing_data=aws_cloudwatch.TreatMissingData.NOT_BREACHING)
