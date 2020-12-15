@@ -1,14 +1,21 @@
 from aws_cdk import core, aws_cloudwatch
 from parse_config_file import get_metric_name
 
+from cut_ticket import TicketAction
 
 namespace = "ModelParallelism"
 period = core.Duration.days(1)
+
+ticket_arn = "arn:aws:cloudwatch::cwa-internal:ticket:5:AWS:DeepEngine:Model+Parallelism:AWS+Model+Parallelism:"
+
 
 class UpdateMatricsStack(core.Stack):
 
     def __init__(self, scope: core.Construct, construct_id: str, props, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
+
+        alarm_action = TicketAction()
+        print(alarm_action)
 
         for frame_model in props:
             names = props[frame_model]["Names"]
@@ -46,6 +53,6 @@ class UpdateMatricsStack(core.Stack):
                                                 statistic="avg",
                                                 threshold=threshold,
                                                 treat_missing_data=aws_cloudwatch.TreatMissingData.NOT_BREACHING)
-                    break
+                    alarm.add_alarm_action(alarm_action)
                 break
-            
+            break
