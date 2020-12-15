@@ -107,6 +107,7 @@ def get_alarm_name(model_name, framework_name, instance, config_file, metric_nam
     elif "sequential" in config_file:
         seq = "-NonSequential"
         dimensions.append({'Name': 'Horovod', 'Value': 'False'})
+        dimensions.append({'Name': 'Instance count', 'Value': '1'})
     else:
         dimensions.append({'Name': 'Horovod', 'Value': 'False'})
         dimensions.append({'Name': 'Instance count', 'Value': '1'})
@@ -129,7 +130,6 @@ def get_alarm_name(model_name, framework_name, instance, config_file, metric_nam
 
 
 def is_matric_exist(alarm, metric_name, dimensions):
-    # TODO: deal with bert non sequential missing values
     has_data = False
     for i in range(1, retry_fetch_days):
         metric_data = cloudwatch.get_metric_data(

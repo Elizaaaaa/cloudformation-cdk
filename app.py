@@ -22,9 +22,7 @@ for name in os.listdir(config_path):
         alarm_names.append(names)
         alarm_dimensions.append(dimensions)
         alarm_thresholds.append(thresholds)
-        if name == "pytorch_BERT" and "commit" in config_file:
-            print(f"\nCheck what's in the name:\n{alarm_names}\n")
-    
+
     props[name] = {"Names": alarm_names, "Dimensions": alarm_dimensions, "Thresholds": alarm_thresholds}
 
 app = core.App()
