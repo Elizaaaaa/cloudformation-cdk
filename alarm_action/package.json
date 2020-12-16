@@ -1,12 +1,45 @@
 {
-  "name": "alarm_action",
+  "name": "alarm-action",
   "version": "1.0.0",
+  "description": "A demonstration jsii library",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "jsii",
+    "build:watch": "jsii --watch",
+    "package": "jsii-pacmak"
   },
   "keywords": [],
-  "author": "",
+  "author": "Eliza Zhang",
+  "repository": {
+    "url": "git+https://github.com/Elizaaaaa/cloudformation-cdk.git"
+  },
   "license": "ISC",
-  "description": ""
+  "stability": "stable",
+  "types": "index.ts",
+  "jsii": {
+    "outdir": "dist",
+    "versionFormat": "short",
+    "targets": {
+      "python": {
+        "distName": "eliza_cdk",
+        "module": "alarm"
+      }
+    }
+  },
+  "devDependencies": {
+    "@aws-cdk": "*",
+    "jsii": "^1.16.0"
+  },
+  "bundleDependencies": [
+    "@aws-cdk/aws-cloudwatch", "jsii", "@aws-cdk/core"
+  ],
+  "bugs": {
+    "url": "https://github.com/Elizaaaaa/cloudformation-cdk/issues"
+  },
+  "homepage": "https://github.com/Elizaaaaa/cloudformation-cdk#readme",
+  "dependencies": {
+    "@aws-cdk/aws-cloudwatch": "*",
+    "@aws-cdk/core": "*",
+    "jsii": "^1.16.0"
+  }
 }
