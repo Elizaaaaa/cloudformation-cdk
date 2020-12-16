@@ -2,9 +2,6 @@
 import glob, os
 
 from aws_cdk import core, aws_cloudwatch, aws_sns
-import aws_cdk.aws_cloudwatch_actions as cw_actions
-
-from update_matrics.cut_ticket import TicketAction
 
 from update_matrics.update_matrics_stack import UpdateMatricsStack
 from update_matrics.parse_config_file import get_alarms
@@ -32,14 +29,5 @@ for name in os.listdir(config_path):
 app = core.App()
 
 stack = UpdateMatricsStack(app, "update-matrics", props)
-topic = aws_sns.Topic(stack, "Topic")
-action = cw_actions.SnsAction(topic)
-action = TicketAction(stack, "ticket-action")
-print(action.to_string())
-for alarm in stack.outputs:
-    alarm.add_alarm_action(action)
-
-# for alarm in stack.outputs:
-#     alarm.add_alarm_action(action)
 
 app.synth()
