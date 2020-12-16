@@ -1,4 +1,5 @@
-from aws_cdk import core, aws_cloudwatch
+from aws_cdk import core, aws_cloudwatch, aws_sns
+import aws_cdk.aws_cloudwatch_actions as cw_actions
 from parse_config_file import get_metric_name
 
 from cut_ticket import TicketAction
@@ -14,8 +15,7 @@ class UpdateMatricsStack(core.Stack):
     def __init__(self, scope: core.Construct, construct_id: str, props, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        alarm_action = TicketAction()
-        print(alarm_action)
+        self.alarms = []
 
         for frame_model in props:
             names = props[frame_model]["Names"]
@@ -53,6 +53,10 @@ class UpdateMatricsStack(core.Stack):
                                                 statistic="avg",
                                                 threshold=threshold,
                                                 treat_missing_data=aws_cloudwatch.TreatMissingData.NOT_BREACHING)
-                    alarm.add_alarm_action(alarm_action)
+                    self.alarms.append(alarm)
                 break
             break
+    
+    @property
+    def outputs(self):
+        return self.alarms
