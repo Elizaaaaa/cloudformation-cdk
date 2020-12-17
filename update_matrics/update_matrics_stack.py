@@ -1,5 +1,5 @@
 from aws_cdk import core, aws_cloudwatch, aws_sns
-from aws_cdk.aws_cloudwatch import TextWidget, GraphWidget
+from aws_cdk.aws_cloudwatch import TextWidget, GraphWidget, Color
 import aws_cdk.aws_cloudwatch_actions as cw_actions
 from parse_config_file import get_metric_name
 
@@ -57,7 +57,8 @@ class UpdateMatricsStack(core.Stack):
                     # Update Dashboard Graph Widget
                     dashboard.add_widgets(GraphWidget(
                                             title=name.split("-")[-1],
-                                            left=[metric]
+                                            left=[metric],
+                                            left_annotations=[{"value": threshold, "label": "Threshold", "color": Color.RED}]
                                         ))
 
                     # Update Alarm∂
