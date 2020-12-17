@@ -12,7 +12,6 @@ config_path = "./configs"
 props = {}
 for name in os.listdir(config_path):
     framework, model = name.split("_")
-    print(f"Reading the config of {model} {framework}")
     path = os.path.join(config_path, name)
     alarm_names = []
     alarm_dimensions = []
@@ -22,8 +21,7 @@ for name in os.listdir(config_path):
         alarm_names.append(names)
         alarm_dimensions.append(dimensions)
         alarm_thresholds.append(thresholds)
-        break
-
+    
     props[name] = {"Names": alarm_names, "Dimensions": alarm_dimensions, "Thresholds": alarm_thresholds}
 
 app = core.App()

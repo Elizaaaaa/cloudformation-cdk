@@ -121,10 +121,10 @@ def get_alarm_name(model_name, framework_name, instance, config_file, metric_nam
 
     name = f"Rubik{pipeline}{model}{framework}{hvd}{seq}{instance}{nodes}-{metric_name}"
 
-    metric_name = get_metric_name(name)
-    if not is_matric_exist(name, metric_name, dimensions):
-        print(f"The alarm {name} does not have necessary cloudwatch value!")
-        return [], []
+    # metric_name = get_metric_name(name)
+    # if not is_matric_exist(name, metric_name, dimensions):
+    #     print(f"The alarm {name} does not have necessary cloudwatch value!")
+    #     return "", []
     
     return name, dimensions
 
